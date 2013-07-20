@@ -42,10 +42,9 @@ test('getCorrectArguments', function(){
 
 test('Overload', function(){
     var obj = {
-        field: 'test',
-        func: Overload('{String}event, {String}[selector], {*}[data], {Function}fn', function(event, selector, data, fn){
+        func: Overload('{Object|String}event, {String}[selector], {*}[data], {Function}fn', function(event, selector, data, fn){
             ok(this === obj);
-            ok(typeof event === 'string');
+            ok(typeof event === 'object' || typeof event === 'string');
             ok(typeof selector === 'undefined');
             ok(typeof data !== 'undefined');
             ok(typeof fn === 'function');

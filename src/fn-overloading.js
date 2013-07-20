@@ -1,43 +1,52 @@
 function convertArgsString(argsString) {
-    argsString = argsString.split(/\s*,\s*/);
+    argsString = argsString.split(',');
 
-    var args = [],
-        classToType = {'Object':'object', 'String':'string', 'Number':'number', 'Boolean':'boolean', 'Function':'function'},
-        match, types, type, argument,
+    var args = {
+            length: argsString.length,
+            requiredLength: 0
+        },
+        reg = /\{([^}]+)\}\s*(\[*\w*)/,
+        match, types, argument,
         i, n;
 
     for(i = 0; i < argsString.length; i++) {
-        match = argsString[i].match(/\{([^}]+)\}\s*(\[*\w+\]*)/);
-
+        match = argsString[i].match(reg);
         argument = {
-            classes:  [],
             types:    [],
-            mixed:  match[1] === '*',
-            optional: match[2].charAt(0) === '['
+            mixed:    match[1] === '*',
+            required: match[2].charAt(0) !== '['
         };
 
-        args.push(argument);
+        args[i] = argument;
+
+        if( argument.required ) args.requiredLength++;
 
         if( argument.mixed ) continue;
 
         types = match[1].split('|');
         for(n = 0; n < types.length; n++) {
-            type = types[n];
-            if( classToType.hasOwnProperty(type) ) {
-                argument.types.push(classToType[type]);
-            }
-            else {
-                argument.classes.push(type);
-            }
+            argument.types.push(types[n].toLowerCase());
         }
     }
 
     return args;
 }
 
+function isValidArgument(argument, option) {
+    if( option.mixed ) return true;
+
+    for(var i = 0; i < option.types.length; i++) {
+        if( typeof argument === option.types[i] ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function getCorrectArguments(args, ops) {
     var correctArgs = new Array(ops.length),
-        i, n, argument, option;
+        i;
 
     if( args.length === ops.length ) {
         for(i = 0; i < args.length; i++) {
@@ -47,19 +56,27 @@ function getCorrectArguments(args, ops) {
         return correctArgs;
     }
 
-    for(i = 0; i < args.length; i++) {
-        argument = args[i];
-        for(n = 0; n < ops.length; n++) {
-            option = ops[n];
+    var argsForRequired = args.length,
+        required = ops.requiredLength,
+        n, argument, option;
 
+    for(i = 0, n = 0; i < ops.length; i++) {
+        option = ops[i];
+        argument = args[n];
+        if( option.required || (isValidArgument(argument, option) && argsForRequired - 1 >= required) ) {
+            correctArgs[i] = argument;
+            n++;
+            argsForRequired--;
+            if( option.required ) required--;
         }
     }
 
     return correctArgs;
 }
 
-function Overload(args) {
+function Overload(argsOps, func) {
+    argsOps = convertArgsString(argsOps);
     return function(){
-
+        return func.apply(this, getCorrectArguments(arguments, argsOps));
     }
 }

@@ -1,17 +1,19 @@
 test('convertArgsString', function(){
     var argsString = '{Object|String}events, {String}[selector], {*}[data], {Function}fn',
-        argsArray = [
-            {classes: [], types: ['object', 'string'], mixed: false, optional: false},
-            {classes: [], types: ['string'], mixed: false, optional: true},
-            {classes: [], types: [], mixed: true, optional: true},
-            {classes: [], types: ['function'], mixed: false, optional: false}
-        ];
+        argsArray = {
+            length: 4,
+            requiredLength: 2,
+            0: {types: ['object', 'string'], mixed: false, required: true},
+            1: {types: ['string'], mixed: false, required: false},
+            2: {types: [], mixed: true, required: false},
+            3: {types: ['function'], mixed: false, required: true}
+        };
 
     equal(JSON.stringify(convertArgsString(argsString)), JSON.stringify(argsArray));
 });
 
 test('getCorrectArguments', function(){
-    var argsOps = convertArgsString('{Object|String}events, {String}[selector], {*}[data], {Function}fn');
+    var argsOps = convertArgsString('{String}events, {Object|String}[selector], {*}[data], {Function}fn');
 
     var check = function(){
         var args = getCorrectArguments(arguments, argsOps);
@@ -23,16 +25,32 @@ test('getCorrectArguments', function(){
         return args.join(', ');
     };
 
-    equal(check({}, '', '', function(){}), 'object, string, string, function');
-    equal(check({}, '', function(){}),     'object, string, null, function');
-    equal(check({}, 1, function(){}),      'object, null, number, function');
-    equal(check({}, function(){}),         'object, null, null, function');
+    equal(check('', {}, '', function(){}), 'string, object, string, function');
+    equal(check('', {}, function(){}),     'string, object, undefined, function');
+    equal(check('', 1, function(){}),      'string, undefined, number, function');
+    equal(check('', function(){}),         'string, undefined, undefined, function');
 
     equal(check('', '', '', function(){}), 'string, string, string, function');
-    equal(check('', '', function(){}),     'string, string, null, function');
-    equal(check('', 1, function(){}),      'string, null, number, function');
-    equal(check('', function(){}),         'string, null, null, function');
+    equal(check('', '', {}, function(){}), 'string, string, object, function');
+    equal(check('', '', function(){}),     'string, string, undefined, function');
 
-    equal(check('', function(){}, function(){}), 'string, null, function, function');
+    equal(check('', function(){}, function(){}), 'string, undefined, function, function');
 
+    equal(check('', function(){}, '', '', function(){}, ''), 'string, undefined, function, string');
+
+});
+
+test('Overload', function(){
+    var obj = {
+        field: 'test',
+        func: Overload('{String}event, {String}[selector], {*}[data], {Function}fn', function(event, selector, data, fn){
+            ok(this === obj);
+            ok(typeof event === 'string');
+            ok(typeof selector === 'undefined');
+            ok(typeof data !== 'undefined');
+            ok(typeof fn === 'function');
+        })
+    };
+
+    obj.func('', 1, function(){});
 });

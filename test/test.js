@@ -9,14 +9,14 @@ test('convertArgsString', function(){
             3: {types: ['function'], mixed: false, required: true}
         };
 
-    equal(JSON.stringify(convertArgsString(argsString)), JSON.stringify(argsArray));
+    equal(JSON.stringify(Overload.convertArgsString(argsString)), JSON.stringify(argsArray));
 });
 
 test('getCorrectArguments', function(){
-    var argsOps = convertArgsString('{String}events, {Object|String}[selector], {*}[data], {Function}fn');
+    var argsOps = Overload.convertArgsString('{String}events, {Object|String}[selector], {*}[data], {Function}fn');
 
     var check = function(){
-        var args = getCorrectArguments(arguments, argsOps);
+        var args = Overload.getCorrectArguments(arguments, argsOps);
 
         for(var i = 0; i < args.length; i++) {
             args[i] = typeof args[i];

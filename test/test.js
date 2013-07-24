@@ -9,7 +9,7 @@ test('convertArgsString', function(){
             3: {types: ['function'], mixed: false, required: true}
         };
 
-    equal(JSON.stringify(Overload.convertArgsString(argsString)), JSON.stringify(argsArray));
+    deepEqual(Overload.convertArgsString(argsString), argsArray);
 });
 
 test('getCorrectArguments', function(){

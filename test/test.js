@@ -5,7 +5,7 @@ test('convertArgsString', function(){
             requiredLength: 2,
             0: {types: ['object', 'string'], mixed: false, required: true},
             1: {types: ['string'], mixed: false, required: false},
-            2: {types: [], mixed: true, required: false},
+            2: {mixed: true, required: false},
             3: {types: ['function'], mixed: false, required: true}
         };
 

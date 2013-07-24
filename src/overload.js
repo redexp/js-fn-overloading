@@ -21,7 +21,6 @@
         for(i = 0; i < argsString.length; i++) {
             match = argsString[i].match(reg);
             argument = {
-                types:    [],
                 mixed:    match[1] === '*',
                 required: match[2].charAt(0) !== '['
             };

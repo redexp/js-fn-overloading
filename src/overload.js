@@ -4,8 +4,10 @@
         argsOps = ov.convertArgsString(argsOps);
         return function(){
             return func.apply(this, ov.getCorrectArguments(arguments, argsOps));
-        }
-    };
+        };
+    },
+    reg = /\{([^}]+)\}\s*(\[*\w*)/,
+    slice = [].slice;
 
     ov.convertArgsString = function(argsString) {
         argsString = argsString.split(',');
@@ -14,14 +16,11 @@
                 length: argsString.length,
                 requiredLength: 0
             },
-            reg = /\{([^}]+)\}\s*(\[*\w*)/,
-            match, types, argument,
-            i, n;
+            match, argument, i;
 
         for(i = 0; i < argsString.length; i++) {
             match = argsString[i].match(reg);
             argument = {
-                types:    [],
                 mixed:    match[1] === '*',
                 required: match[2].charAt(0) !== '['
             };
@@ -32,42 +31,25 @@
 
             if( argument.mixed ) continue;
 
-            types = match[1].split('|');
-            for(n = 0; n < types.length; n++) {
-                argument.types.push(types[n].toLowerCase());
-            }
+            argument.types = match[1].toLowerCase().split('|');
         }
 
         return args;
     };
 
     ov.isValidArgument = function(argument, option) {
-        if( option.mixed ) return true;
-
-        for(var i = 0; i < option.types.length; i++) {
-            if( typeof argument === option.types[i] ) {
-                return true;
-            }
-        }
-
-        return false;
+        return option.mixed || option.types.indexOf(typeof argument) > -1;
     };
 
     ov.getCorrectArguments = function(args, ops) {
-        var correctArgs = new Array(ops.length),
-            i;
-
         if( args.length === ops.length ) {
-            for(i = 0; i < args.length; i++) {
-                correctArgs[i] = args[i];
-            }
-
-            return correctArgs;
+            return slice.call(args);
         }
 
-        var argsForRequired = args.length,
+        var correctArgs = new Array(ops.length),
+            argsForRequired = args.length,
             required = ops.requiredLength,
-            n, argument, option;
+            n, argument, option, i;
 
         for(i = 0, n = 0; i < ops.length; i++) {
             option = ops[i];
